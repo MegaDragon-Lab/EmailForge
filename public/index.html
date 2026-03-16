@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EmailForge — Write better emails with AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0d0d0f;
+    --surface: #141416;
+    --surface2: #1a1a1d;
+    --border: #262629;
+    --border2: #323236;
+    --text: #e8e8ec;
+    --muted: #6b6b72;
+    --accent: #4f9cf9;
+    --accent2: #2d7dd2;
+    --success: #3ecf8e;
+    --mono: 'DM Mono', monospace;
+    --sans: 'Syne', sans-serif;
+  }
+  body { background: var(--bg); color: var(--text); font-family: var(--sans); min-height: 100vh; }
+
+  /* Header */
+  header { padding: 2.5rem 2rem 2rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
+  .logo { display: flex; align-items: center; gap: 0.8rem; }
+  .logo-icon { width: 36px; height: 36px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1rem; }
+  .logo-text { font-size: 1.3rem; font-weight: 700; letter-spacing: -0.02em; }
+  .logo-text span { color: var(--accent); }
+  .lang-switcher { display: flex; border: 1px solid var(--border2); border-radius: 6px; overflow: hidden; }
+  .lang-btn { padding: 0.35rem 0.8rem; font-family: var(--mono); font-size: 0.72rem; font-weight: 400; cursor: pointer; border: none; background: transparent; color: var(--muted); transition: all 0.15s; }
+  .lang-btn.active { background: var(--accent); color: white; }
+
+  /* Hero */
+  .hero { text-align: center; padding: 4rem 2rem 3rem; border-bottom: 1px solid var(--border); }
+  .hero-badge { display: inline-flex; align-items: center; gap: 0.5rem; background: var(--surface2); border: 1px solid var(--border2); border-radius: 100px; padding: 0.3rem 0.9rem; font-family: var(--mono); font-size: 0.72rem; color: var(--accent); margin-bottom: 1.5rem; letter-spacing: 0.05em; }
+  .hero h1 { font-size: clamp(2.2rem, 5vw, 3.8rem); font-weight: 700; line-height: 1.05; letter-spacing: -0.03em; margin-bottom: 1rem; }
+  .hero h1 em { font-style: italic; color: var(--accent); }
+  .hero p { color: var(--muted); font-size: 1rem; max-width: 500px; margin: 0 auto; font-family: var(--mono); font-weight: 300; }
+
+  /* Main */
+  main { max-width: 800px; margin: 0 auto; padding: 3rem 1.5rem 6rem; }
+
+  /* Type selector */
+  .type-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; margin-bottom: 1.5rem; }
+  @media(max-width: 500px) { .type-grid { grid-template-columns: 1fr; } }
+  .type-card { padding: 1rem 1.2rem; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; transition: all 0.15s; }
+  .type-card:hover { border-color: var(--border2); background: var(--surface2); }
+  .type-card.active { border-color: var(--accent); background: rgba(79, 156, 249, 0.06); }
+  .type-card-icon { font-size: 1.2rem; margin-bottom: 0.4rem; }
+  .type-card-label { font-size: 0.88rem; font-weight: 600; color: var(--text); }
+  .type-card-desc { font-size: 0.75rem; color: var(--muted); font-family: var(--mono); margin-top: 0.2rem; }
+
+  /* Section label */
+  .section-label { font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.6rem; display: flex; align-items: center; gap: 0.5rem; }
+  .section-label::before { content: '//'; color: var(--accent); }
+
+  /* Form */
+  .form-block { margin-bottom: 1.5rem; }
+  textarea, input { width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 0.9rem 1rem; font-family: var(--mono); font-size: 0.88rem; color: var(--text); outline: none; transition: border-color 0.2s; resize: vertical; }
+  textarea:focus, input:focus { border-color: var(--accent); }
+  textarea::placeholder, input::placeholder { color: var(--muted); }
+
+  /* Tone pills */
+  .tone-group { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .tone-pill { padding: 0.4rem 0.9rem; border: 1px solid var(--border2); border-radius: 100px; font-size: 0.78rem; cursor: pointer; background: var(--surface); color: var(--muted); font-family: var(--mono); transition: all 0.15s; user-select: none; }
+  .tone-pill.active { background: var(--accent); color: white; border-color: var(--accent); }
+  .tone-pill:hover:not(.active) { border-color: var(--accent); color: var(--text); }
+
+  /* Toggle for reply */
+  .toggle-row { display: flex; align-items: center; gap: 0.8rem; margin-bottom: 1rem; cursor: pointer; }
+  .toggle { width: 36px; height: 20px; background: var(--border2); border-radius: 100px; position: relative; transition: background 0.2s; flex-shrink: 0; }
+  .toggle.on { background: var(--accent); }
+  .toggle::after { content: ''; position: absolute; width: 14px; height: 14px; background: white; border-radius: 50%; top: 3px; left: 3px; transition: left 0.2s; }
+  .toggle.on::after { left: 19px; }
+  .toggle-label { font-size: 0.82rem; color: var(--muted); font-family: var(--mono); }
+
+  /* Generate button */
+  .btn-generate { width: 100%; padding: 1rem; background: var(--accent); color: white; border: none; border-radius: 8px; font-family: var(--sans); font-size: 0.88rem; font-weight: 600; letter-spacing: 0.05em; cursor: pointer; transition: background 0.2s; margin-top: 0.5rem; }
+  .btn-generate:hover { background: var(--accent2); }
+  .btn-generate:disabled { background: var(--border2); color: var(--muted); cursor: not-allowed; }
+
+  /* Error */
+  .error-msg { background: rgba(255,80,80,0.08); border: 1px solid rgba(255,80,80,0.3); border-radius: 8px; padding: 0.8rem 1rem; color: #ff6b6b; font-size: 0.82rem; margin-top: 1rem; display: none; font-family: var(--mono); }
+
+  /* Divider */
+  .divider { display: flex; align-items: center; gap: 1rem; margin: 2.5rem 0 2rem; }
+  .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+  .divider-text { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); letter-spacing: 0.1em; white-space: nowrap; }
+
+  /* Results */
+  #results { display: none; }
+  .email-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 1.2rem; overflow: hidden; animation: fadeUp 0.4s ease both; }
+  .email-card:nth-child(2) { animation-delay: 0.1s; }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+  .email-header { padding: 1rem 1.2rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+  .email-version { font-family: var(--mono); font-size: 0.7rem; color: var(--accent); letter-spacing: 0.1em; text-transform: uppercase; }
+  .email-subject { font-family: var(--mono); font-size: 0.8rem; color: var(--muted); flex: 1; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .email-body { padding: 1.2rem; font-family: var(--mono); font-size: 0.85rem; line-height: 1.8; color: var(--text); white-space: pre-wrap; }
+  .email-footer { padding: 0.8rem 1.2rem; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 0.6rem; }
+  .btn-copy { padding: 0.4rem 1rem; background: transparent; border: 1px solid var(--border2); border-radius: 6px; font-family: var(--mono); font-size: 0.75rem; cursor: pointer; color: var(--muted); transition: all 0.15s; }
+  .btn-copy:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-copy.copied { border-color: var(--success); color: var(--success); }
+  .btn-regen { display: block; margin: 1.5rem auto 0; padding: 0.6rem 1.5rem; background: transparent; border: 1px solid var(--border2); border-radius: 6px; font-family: var(--mono); font-size: 0.78rem; cursor: pointer; color: var(--muted); transition: all 0.15s; }
+  .btn-regen:hover { border-color: var(--accent); color: var(--accent); }
+
+  footer { text-align: center; padding: 2rem; border-top: 1px solid var(--border); font-family: var(--mono); font-size: 0.72rem; color: var(--muted); letter-spacing: 0.05em; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">✉</div>
+    <div class="logo-text">Email<span>Forge</span></div>
+  </div>
+  <div class="lang-switcher">
+    <button class="lang-btn active" onclick="setLang('en')">EN</button>
+    <button class="lang-btn" onclick="setLang('es')">ES</button>
+  </div>
+</header>
+
+<div class="hero">
+  <div class="hero-badge">✦ <span id="badge-text">AI-powered email writer</span></div>
+  <h1 id="hero-title"></h1>
+  <p id="hero-sub"></p>
+</div>
+
+<main>
+  <!-- Email type -->
+  <div class="form-block">
+    <div class="section-label" id="lbl-type"></div>
+    <div class="type-grid" id="type-grid"></div>
+  </div>
+
+  <!-- Tone -->
+  <div class="form-block">
+    <div class="section-label" id="lbl-tone"></div>
+    <div class="tone-group" id="tones"></div>
+  </div>
+
+  <!-- Reply toggle -->
+  <div class="toggle-row" onclick="toggleReply()">
+    <div class="toggle" id="reply-toggle"></div>
+    <span class="toggle-label" id="lbl-reply-toggle"></span>
+  </div>
+
+  <!-- Original email (for reply) -->
+  <div class="form-block" id="original-email-block" style="display:none;">
+    <div class="section-label" id="lbl-original"></div>
+    <textarea id="original-email" rows="4"></textarea>
+  </div>
+
+  <!-- Situation -->
+  <div class="form-block">
+    <div class="section-label" id="lbl-situation"></div>
+    <textarea id="situation" rows="4"></textarea>
+  </div>
+
+  <div class="error-msg" id="error"></div>
+  <button class="btn-generate" id="btn-gen" onclick="generate()"></button>
+
+  <div id="results">
+    <div class="divider"><span class="divider-text" id="results-label"></span></div>
+    <div id="emails-container"></div>
+    <button class="btn-regen" id="btn-regen" onclick="generate()"></button>
+  </div>
+</main>
+
+<footer id="footer-text"></footer>
+
+<script>
+const i18n = {
+  en: {
+    badge: 'AI-powered email writer',
+    heroTitle: 'Write <em>better</em> emails,<br>in seconds',
+    heroSub: 'Describe your situation. Get 2 ready-to-send email versions instantly.',
+    lblType: 'email type',
+    lblTone: 'tone',
+    lblReplyToggle: 'I want to reply to an existing email',
+    lblOriginal: 'original email to reply to',
+    lblSituation: 'describe your situation',
+    situationPlaceholder: 'e.g. I need to follow up with a client who hasn\'t responded in 2 weeks about a pending proposal worth $50k...',
+    originalPlaceholder: 'Paste the email you want to reply to here...',
+    btnGenerate: '→  Generate emails',
+    btnGenerating: 'Generating...',
+    btnRegen: '↺  Regenerate',
+    resultsLabel: '// your emails are ready',
+    errorSituation: 'Please describe your situation.',
+    errorGeneral: 'Error generating emails. Please try again.',
+    footer: 'EmailForge · Powered by AI · Free',
+    types: [
+      { key: 'Professional', icon: '💼', label: 'Professional', desc: 'Work & business emails' },
+      { key: 'Sales & Outreach', icon: '🎯', label: 'Sales & Outreach', desc: 'Cold emails & pitches' },
+      { key: 'Difficult', icon: '⚡', label: 'Difficult', desc: 'Complaints, rejections, hard news' },
+      { key: 'Reply', icon: '↩', label: 'Reply', desc: 'Respond to received emails' },
+    ],
+    tones: [
+      { key: 'Formal', label: 'Formal' },
+      { key: 'Friendly', label: 'Friendly' },
+      { key: 'Direct', label: 'Direct' },
+      { key: 'Assertive', label: 'Assertive' },
+      { key: 'Empathetic', label: 'Empathetic' },
+    ],
+    versionLabels: ['version_a', 'version_b'],
+    subjectLabel: 'SUBJECT',
+    copyBtn: 'copy',
+    copiedBtn: '✓ copied',
+  },
+  es: {
+    badge: 'Redactor de emails con IA',
+    heroTitle: 'Escribe <em>mejores</em> emails,<br>en segundos',
+    heroSub: 'Describe tu situación. Obtén 2 versiones listas para enviar al instante.',
+    lblType: 'tipo de email',
+    lblTone: 'tono',
+    lblReplyToggle: 'Quiero responder a un email existente',
+    lblOriginal: 'email original al que responder',
+    lblSituation: 'describe tu situación',
+    situationPlaceholder: 'Ej: Necesito hacer seguimiento a un cliente que no ha respondido en 2 semanas sobre una propuesta pendiente de 50.000€...',
+    originalPlaceholder: 'Pega aquí el email al que quieres responder...',
+    btnGenerate: '→  Generar emails',
+    btnGenerating: 'Generando...',
+    btnRegen: '↺  Regenerar',
+    resultsLabel: '// tus emails están listos',
+    errorSituation: 'Por favor describe tu situación.',
+    errorGeneral: 'Error al generar. Inténtalo de nuevo.',
+    footer: 'EmailForge · Impulsado por IA · Gratis',
+    types: [
+      { key: 'Profesional', icon: '💼', label: 'Profesional', desc: 'Emails de trabajo y negocio' },
+      { key: 'Ventas y Outreach', icon: '🎯', label: 'Ventas y Outreach', desc: 'Emails en frío y pitches' },
+      { key: 'Difícil', icon: '⚡', label: 'Difícil', desc: 'Quejas, rechazos, malas noticias' },
+      { key: 'Respuesta', icon: '↩', label: 'Respuesta', desc: 'Responder a emails recibidos' },
+    ],
+    tones: [
+      { key: 'Formal', label: 'Formal' },
+      { key: 'Cercano', label: 'Cercano' },
+      { key: 'Directo', label: 'Directo' },
+      { key: 'Asertivo', label: 'Asertivo' },
+      { key: 'Empático', label: 'Empático' },
+    ],
+    versionLabels: ['versión_a', 'versión_b'],
+    subjectLabel: 'ASUNTO',
+    copyBtn: 'copiar',
+    copiedBtn: '✓ copiado',
+  }
+};
+
+let lang = localStorage.getItem('ef-lang') || 'en';
+let selectedType = 0;
+let selectedTone = 0;
+let replyMode = false;
+let genCount = parseInt(localStorage.getItem('ef-count') || '0');
+
+function setLang(l) {
+  lang = l;
+  localStorage.setItem('ef-lang', l);
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.textContent === l.toUpperCase()));
+  document.documentElement.lang = l;
+  renderUI();
+}
+
+function renderUI() {
+  const t = i18n[lang];
+  document.getElementById('badge-text').textContent = t.badge;
+  document.getElementById('hero-title').innerHTML = t.heroTitle;
+  document.getElementById('hero-sub').textContent = t.heroSub;
+  document.getElementById('lbl-type').textContent = t.lblType;
+  document.getElementById('lbl-tone').textContent = t.lblTone;
+  document.getElementById('lbl-reply-toggle').textContent = t.lblReplyToggle;
+  document.getElementById('lbl-original').textContent = t.lblOriginal;
+  document.getElementById('lbl-situation').textContent = t.lblSituation;
+  document.getElementById('situation').placeholder = t.situationPlaceholder;
+  document.getElementById('original-email').placeholder = t.originalPlaceholder;
+  document.getElementById('btn-gen').textContent = t.btnGenerate;
+  document.getElementById('btn-regen').textContent = t.btnRegen;
+  document.getElementById('results-label').textContent = t.resultsLabel;
+  document.getElementById('footer-text').textContent = t.footer;
+
+  // Types
+  const typeGrid = document.getElementById('type-grid');
+  typeGrid.innerHTML = t.types.map((type, i) => `
+    <div class="type-card ${i === selectedType ? 'active' : ''}" onclick="selectType(${i})">
+      <div class="type-card-icon">${type.icon}</div>
+      <div class="type-card-label">${type.label}</div>
+      <div class="type-card-desc">${type.desc}</div>
+    </div>
+  `).join('');
+
+  // Tones
+  const tonesEl = document.getElementById('tones');
+  tonesEl.innerHTML = t.tones.map((tone, i) =>
+    `<span class="tone-pill ${i === selectedTone ? 'active' : ''}" onclick="selectTone(${i})">${tone.label}</span>`
+  ).join('');
+
+  // Reply toggle
+  document.getElementById('reply-toggle').className = 'toggle' + (replyMode ? ' on' : '');
+}
+
+function selectType(i) {
+  selectedType = i;
+  renderUI();
+}
+
+function selectTone(i) {
+  selectedTone = i;
+  renderUI();
+}
+
+function toggleReply() {
+  replyMode = !replyMode;
+  document.getElementById('reply-toggle').className = 'toggle' + (replyMode ? ' on' : '');
+  document.getElementById('original-email-block').style.display = replyMode ? 'block' : 'none';
+}
+
+function parseEmail(raw) {
+  const t = i18n[lang];
+  const subjectKey = lang === 'en' ? 'SUBJECT:' : 'ASUNTO:';
+  const lines = raw.split('\n');
+  let subject = '';
+  let bodyLines = [];
+  let foundSubject = false;
+
+  for (const line of lines) {
+    if (!foundSubject && line.trim().toUpperCase().startsWith(subjectKey.toUpperCase())) {
+      subject = line.replace(/^(SUBJECT:|ASUNTO:)/i, '').trim();
+      foundSubject = true;
+    } else if (foundSubject || (!foundSubject && bodyLines.length > 0)) {
+      bodyLines.push(line);
+    } else {
+      bodyLines.push(line);
+    }
+  }
+  return { subject, body: bodyLines.join('\n').trim() };
+}
+
+async function generate() {
+  const t = i18n[lang];
+  const situation = document.getElementById('situation').value.trim();
+  const originalEmail = document.getElementById('original-email').value.trim();
+  const emailType = t.types[selectedType].key;
+  const tone = t.tones[selectedTone].key;
+  const errEl = document.getElementById('error');
+  const btn = document.getElementById('btn-gen');
+
+  if (!situation) { errEl.textContent = t.errorSituation; errEl.style.display = 'block'; return; }
+  errEl.style.display = 'none';
+  btn.disabled = true;
+  btn.textContent = t.btnGenerating;
+  document.getElementById('results').style.display = 'none';
+
+  try {
+    const res = await fetch('/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ situation, emailType, tone, lang, originalEmail: replyMode ? originalEmail : '' })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || t.errorGeneral);
+
+    const container = document.getElementById('emails-container');
+    container.innerHTML = '';
+
+    data.emails.forEach((email, i) => {
+      const { subject, body } = parseEmail(email);
+      container.innerHTML += `
+        <div class="email-card">
+          <div class="email-header">
+            <span class="email-version">${t.versionLabels[i]}</span>
+            ${subject ? `<span class="email-subject">${t.subjectLabel}: ${subject}</span>` : ''}
+          </div>
+          <div class="email-body">${body}</div>
+          <div class="email-footer">
+            <button class="btn-copy" onclick="copyEmail(this, \`${email.replace(/`/g,'\\`')}\`)">${t.copyBtn}</button>
+          </div>
+        </div>`;
+    });
+
+    document.getElementById('results').style.display = 'block';
+    document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+    genCount++; localStorage.setItem('ef-count', genCount);
+  } catch(e) {
+    errEl.textContent = e.message;
+    errEl.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = t.btnGenerate;
+  }
+}
+
+function copyEmail(btn, text) {
+  const t = i18n[lang];
+  navigator.clipboard.writeText(text);
+  btn.textContent = t.copiedBtn;
+  btn.classList.add('copied');
+  setTimeout(() => { btn.textContent = t.copyBtn; btn.classList.remove('copied'); }, 2000);
+}
+
+renderUI();
+</script>
+</body>
+</html>
